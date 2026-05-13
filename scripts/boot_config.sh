@@ -129,6 +129,20 @@ step_boot_config() {
     else
         info "  → Set syslinux splash background..."
 
+        # Chuyển từ gfxboot sang vesamenu.c32 (gfxboot dùng binary blob, không hỗ trợ MENU BACKGROUND)
+        local ISOLINUX_CFG="$ISOLINUX_DIR/isolinux.cfg"
+        if [ -f "$ISOLINUX_CFG" ]; then
+            # Xoá dòng UI gfxboot / gfxboot.c32 nếu có
+            sed -i '/^[[:space:]]*UI[[:space:]]*gfxboot/Id' "$ISOLINUX_CFG"
+            # Xoá file gfxboot bootlogo nếu có (giải phóng dung lượng)
+            rm -f "$ISOLINUX_DIR/bootlogo" 2>/dev/null || true
+            # Thêm UI vesamenu.c32 nếu chưa có
+            if ! grep -qi "vesamenu" "$ISOLINUX_CFG"; then
+                sed -i '1s|^|UI vesamenu.c32\n|' "$ISOLINUX_CFG"
+            fi
+            ok "    Đã switch sang vesamenu.c32"
+        fi
+
         # Copy banner vào isolinux/ với tên splash.png
         cp "$BANNER_SRC" "$ISOLINUX_DIR/splash.png"
         ok "    Đã copy: splash.png → $ISOLINUX_DIR/"
