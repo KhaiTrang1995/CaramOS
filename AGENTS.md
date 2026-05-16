@@ -1,133 +1,148 @@
-# CaramOS - Linux Distribution (ISO Remaster)
+# CaramOS - Bản phân phối Linux (ISO Remaster)
 
-## Project Overview
+## Tổng quan dự án
 
-CaramOS là bản phân phối Linux dựa trên Linux Mint 22 (Ubuntu 24.04 LTS), thiết kế cho người dùng Việt Nam. Build method: ISO Remaster — extract source ISO → customize (packages, overlay, hooks) → repack (squashfs + xorriso).
+CaramOS là bản phân phối Linux dựa trên Linux Mint 22 (Ubuntu 24.04 LTS), thiết kế cho người dùng Việt Nam. Phương pháp build: ISO Remaster — giải nén ISO gốc → tùy biến (packages, overlay, hooks) → đóng gói lại (squashfs + xorriso).
 
-## Project Structure
+## Cấu trúc dự án
 
 ```
 ./
-├── build.sh           # Main build script (entry point)
-├── Makefile           # Build targets wrapper
-├── scripts/           # Build modules
-│   ├── config.sh      # Version, mirror, output config
-│   ├── utils.sh       # Log, deps check, ISO download
-│   ├── extract.sh     # Mount ISO + rsync + unsquashfs
-│   ├── customize.sh   # Chroot + packages + overlay + hooks
-│   ├── repack.sh      # mksquashfs + xorriso → ISO
-│   ├── boot_config.sh # Boot menu + Plymouth branding
-│   ├── overlay.sh     # Copy includes.chroot into rootfs
-│   ├── chroot_shell.sh# Debug chroot
-│   └── debug_iso.sh   # Check boot splash/Plymouth
+├── build.sh              # Script build chính (điểm khởi đầu)
+├── Makefile              # Các target build
+├── scripts/              # Các module build
+│   ├── config.sh         # Version, mirror, cấu hình output
+│   ├── utils.sh          # Log, kiểm tra root, cài deps, tải ISO
+│   ├── extract.sh        # Mount ISO + rsync + unsquashfs
+│   ├── customize.sh      # Chroot + packages + overlay + hooks
+│   ├── repack.sh         # mksquashfs + xorriso → ISO
+│   ├── boot_config.sh    # Boot menu + Plymouth branding
+│   ├── overlay.sh        # Copy includes.chroot vào rootfs
+│   ├── chroot_shell.sh   # Debug chroot
+│   └── debug_iso.sh      # Kiểm tra boot splash/Plymouth
 ├── config/
-│   ├── packages.txt   # Packages to add (plank, fcitx5, chrome...)
-│   ├── hooks/live/    # Hooks run inside chroot
-│   │   └── NNNN-name.hook.chroot  # Named by priority (0100, 0200...)
-│   └── includes.chroot/ # Overlay files copied to rootfs
-│       ├── etc/       # dconf, lightdm, skel, locale, hostname
-│       └── usr/share/ # applications, backgrounds, icons, themes
-├── docker-compose.yml # Docker builder config
-├── Dockerfile         # Ubuntu 24.04 base for containerized build
-└── assets/            # Logo, banner images
+│   ├── packages.txt      # Packages cần thêm (plank, fcitx5, chrome...)
+│   ├── hooks/live/       # Hooks chạy bên trong chroot
+│   │   └── NNNN-ten.hook.chroot  # Đặt tên theo thứ tự ưu tiên (0100, 0200...)
+│   └── includes.chroot/  # Overlay files copy vào rootfs
+│       ├── etc/          # dconf, lightdm, skel, locale, hostname
+│       └── usr/share/    # applications, backgrounds, icons, themes
+├── docker-compose.yml    # Cấu hình Docker builder
+├── Dockerfile            # Ubuntu 24.04 base cho containerized build
+└── assets/              # Logo, banner images
 ```
 
-## Build Commands
+## Lệnh build
 
-### Local Build (Ubuntu/Mint/Debian only)
+### Build Local (Chỉ Ubuntu/Mint/Debian)
 
-- `make build` — Full dev build (lz4 compression, fast)
-- `make release` — Release build (xz compression, smaller ISO)
-- `make prepare` — Extract ISO to build/ tree for quick edits
-- `make quick` — Prepare if needed → overlay → repack (fast iteration)
-- `make overlay` — Copy includes.chroot into rootfs only
-- `make customize-only` — Run packages + overlay + hooks
-- `make repack` — Repack squashfs + ISO from existing work tree
-- `make iso-only` — Regenerate ISO only from build/custom
-- `make shell` — Enter chroot build/squashfs for manual debug
-- `make boot-only` — Apply boot config + Plymouth branding only
-- `make clean` — Remove all build/cache/output (keep source ISO)
+- `make build` — Build dev đầy đủ (nén lz4, nhanh)
+- `make release` — Build release (nén xz, ISO nhỏ hơn)
+- `make prepare` — Giải nén ISO ra build/ để sửa/test nhanh
+- `make quick` — Prepare nếu cần → overlay → repack (lặp nhanh)
+- `make overlay` — Chỉ copy includes.chroot vào rootfs
+- `make customize-only` — Chạy packages + overlay + hooks
+- `make repack` — Repack squashfs + ISO từ work tree có sẵn
+- `make iso-only` — Tạo lại ISO chỉ từ build/custom
+- `make shell` — Vào chroot build/squashfs để debug thủ công
+- `make boot-only` — Chỉ áp dụng boot config + Plymouth branding
+- `make clean` — Xóa toàn bộ build/cache/output (giữ source ISO)
 
-### Docker Build (Any OS)
+### Build Docker (Mọi hệ điều hành)
 
-- `make docker-build` — Dev build in Docker container
-- `make docker-release` — Release build in Docker container
-- `make docker-clean` — Clean build via Docker
+- `make docker-build` — Build dev trong Docker container
+- `make docker-release` — Build release trong Docker container
+- `make docker-clean` — Clean build qua Docker
 
 ### Debug
 
-- `make debug-iso` — Check boot menu/Plymouth status
-- `make debug-iso ISO=filename.iso` — Check specific ISO
+- `make debug-iso` — Kiểm tra trạng thái boot menu/Plymouth
+- `make debug-iso ISO=ten_file.iso` — Kiểm tra ISO cụ thể
 
-### Parameters
+### Tham số
 
-- `make build ISO=linuxmint-22.3-cinnamon-64bit.iso` — Build from existing ISO
+- `make build ISO=linuxmint-22.3-cinnamon-64bit.iso` — Build từ ISO có sẵn
 
-## Build Workflow
+## Quy trình build
 
 ```
 1. extract.sh     Mount source ISO → rsync filesystem → unsquashfs
-   → build/squashfs/ (read-only base)
-   → build/custom/ (working tree)
+   → build/squashfs/ (base chỉ đọc)
+   → build/custom/ (work tree)
 
-2. customize.sh   chroot into build/custom/
-   → Install packages from config/packages.txt
-   → Copy config/includes.chroot/ overlay
-   → Run config/hooks/live/*.hook.chroot scripts
+2. customize.sh   chroot vào build/custom/
+   → Cài packages từ config/packages.txt
+   → Copy overlay từ config/includes.chroot/
+   → Chạy các script hooks trong config/hooks/live/
 
 3. repack.sh      mksquashfs build/custom/ → build/CaramOS.sfs
    → xorriso → CaramOS-VERSION-cinnamon-amd64.iso
 ```
 
-## Conventions
+## Quy ước
 
 ### Hook Files
 
-- Location: `config/hooks/live/`
-- Naming: `NNNN-name.hook.chroot` (4-digit priority prefix)
-- Execution order: Ascending numeric (0100, 0200, 0900...)
-- Example: `0100-caramos-setup.hook.chroot`
+- Vị trí: `config/hooks/live/`
+- Đặt tên: `NNNN-ten.hook.chroot` (prefix 4 số thứ tự)
+- Thứ tự thực thi: Tăng dần theo số (0100, 0200, 0900...)
+- Ví dụ: `0100-caramos-setup.hook.chroot`
 
 ### Bash Scripts
 
-- Use `set -e` for error handling
-- All scripts under `scripts/` are modular — can run standalone with `--help`
+- Dùng `set -e` để xử lý lỗi
+- Tất cả scripts trong `scripts/` đều có thể chạy độc lập với `--help`
 
-### Version Config
+### Cấu hình Version
 
-- Edit `scripts/config.sh` to change: MINT_VERSION, CARAMOS_VERSION, MIRROR, OUTPUT_ISO
-- Default compression: lz4 (fast dev), xz for release
+- Chỉnh sửa `scripts/config.sh` để thay đổi: MINT_VERSION, CARAMOS_VERSION, MIRROR, OUTPUT_ISO
+- Nén mặc định: lz4 (dev nhanh), xz cho release
 
 ### Output
 
 - ISO output: `CaramOS-${CARAMOS_VERSION}-cinnamon-amd64.iso`
-- Build artifacts: `./build/` directory
-- Source ISO kept intact in cache/ after extract
+- Build artifacts: thư mục `./build/`
+- Source ISO được giữ nguyên trong cache/ sau khi extract
 
-## Important Notes
+## Lưu ý quan trọng
 
-### Requirements
+### Yêu cầu
 
-- Build requires **sudo/root** (mount, chroot, loop operations)
-- Local build: Ubuntu 24.04/Mint 22/Debian base
-- Docker build works on any OS (macOS, Windows, any Linux distro)
+- Build cần **sudo/root** (mount, chroot, loop operations)
+- Build local: Ubuntu 24.04/Mint 22/Debian base
+- Build Docker hoạt động trên mọi hệ điều hành (macOS, Windows, mọi distro Linux)
 
-### Docker Recommended
+### Khuyến nghị dùng Docker
 
-Use Docker for build if not on Ubuntu 24.04:
+Dùng Docker để build nếu không dùng Ubuntu 24.04:
 
 ```bash
 docker compose up --build builder
-# or simply:
+# hoặc đơn giản:
 make docker-build
 ```
 
 ### CI/CD
 
-GitHub Actions workflow in `.github/workflows/build.yml` builds on Ubuntu 24.04 runners.
+GitHub Actions workflow trong `.github/workflows/build.yml` build trên Ubuntu 24.04 runners.
 
 ### Git Workflow
 
-- Commit format: `[build]`, `[config]`, `[assets]`, `[docs]` prefix
-- AGENTS.md: Commit to Git for team shared context
-- No .claudeignore needed — project is not TypeScript/Node.js
+- Định dạng commit: prefix `[build]`, `[config]`, `[assets]`, `[docs]`
+- AGENTS.md: Commit lên Git để team share context
+- Không cần .claudeignore — project không phải TypeScript/Node.js
+
+## Đóng góp
+
+Để xem hướng dẫn chi tiết về đóng góp (kiến trúc, thêm packages, tạo hooks, sửa overlay, quy trình test), xem [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Bảng tra nhanh:
+
+| Task                      | Vị trí                                   | Hành động                              |
+| ------------------------- | ---------------------------------------- | -------------------------------------- |
+| Thêm package              | `config/packages.txt`                    | Sửa file, sau đó `make customize-only` |
+| Tạo hook mới              | `config/hooks/live/NNNN-ten.hook.chroot` | Xem các hook có sẵn để lấy template    |
+| Sửa config hệ thống       | `config/includes.chroot/etc/`            | Sửa, sau đó `make overlay`             |
+| Sửa theme/icons           | `config/includes.chroot/usr/share/`      | Sửa, sau đó `make overlay`             |
+| Test toàn bộ sau thay đổi | —                                        | `make quick && test in VM`             |
+| Debug trong chroot        | —                                        | `make shell`                           |
