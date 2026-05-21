@@ -29,6 +29,12 @@
 Dự án được build theo hướng **ISO remaster**: bung ISO Linux Mint gốc,
 tuỳ biến rootfs bằng packages/overlay/hooks, rồi đóng gói lại thành ISO CaramOS.
 
+> [!IMPORTANT]
+> **Phiên bản hiện tại:** `1.0.1` — **Open Beta**.
+> CaramOS đang mở beta để lấy ý kiến từ cộng đồng. Dự án rất hoan nghênh
+> mọi góp ý, báo lỗi, đề xuất cải tiến giao diện, package, trải nghiệm cài đặt
+> và các ý tưởng giúp CaramOS thân thiện hơn với người dùng Việt Nam.
+
 Mục tiêu của CaramOS là phổ thông hoá Linux — giúp người dùng Việt chuyển từ
 Windows sang Linux dễ hơn, có sẵn giao diện thân thiện, bộ gõ tiếng Việt,
 trình duyệt, ứng dụng văn phòng và các tiện ích quen thuộc.

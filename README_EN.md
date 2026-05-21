@@ -22,6 +22,13 @@
 
 **CaramOS** is a Linux distribution based on [Linux Mint](https://linuxmint.com/), designed specifically for **Vietnamese users**. The name comes from *Carambola* — the starfruit. Its 5-pointed cross-section mirrors the star on Vietnam's flag, and it is a fruit deeply tied to Vietnamese childhood and culture.
 
+> [!IMPORTANT]
+> **Current version:** `1.0.1` — **Open Beta**.
+> CaramOS is currently in open beta to gather feedback from the community.
+> We warmly welcome all suggestions, bug reports, UI/package improvements,
+> installation experience feedback, and ideas that can make CaramOS friendlier
+> for Vietnamese users and the wider Linux community.
+
 > Our mission is to **make Linux accessible for everyone** — everything is kept as simple as possible, software comes pre-installed and ready to use, and we strive to bring familiar Windows applications to our users.
 
 ### Key Features
